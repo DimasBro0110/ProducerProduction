@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.file.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 /**
@@ -29,7 +31,7 @@ public class RabbitQueue {
             this.connectionFactory.setPassword("guest");
             this.pathToDirectory = pathToDirectory;
             this.watchService = this.pathToDirectory.getFileSystem().newWatchService();
-            pathToDirectory.register(watchService, ENTRY_MODIFY);
+            pathToDirectory.register(watchService, ENTRY_CREATE);
             log.log(Level.INFO, "Watch logger registered for: " + pathToDirectory.getFileName());
         } catch (IOException e) {
             e.printStackTrace();
@@ -54,7 +56,7 @@ public class RabbitQueue {
                     if (!valid) {
                         break;
                     }
-                    String pathAbsolute = this.pathToDirectory.toString() + "\\" + fileName.toString();
+                    String pathAbsolute = this.pathToDirectory.toString() + "/" + fileName.toString();
                     jsonObject.put("event", kind.name());
                     jsonObject.put("path", pathAbsolute);
                     channel.basicPublish("", this.queueFileMonitorService, null, jsonObject.toJSONString().getBytes());
